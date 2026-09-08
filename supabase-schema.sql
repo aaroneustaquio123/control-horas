@@ -1,20 +1,10 @@
 -- ============================================================
--- SCRIPT DE MIGRACIÓN SEGURO (SIN INSERCIONES DE DATOS)
--- Ejecuta este script en: Supabase → SQL Editor → New Query → Run
+-- SCRIPT DE ESQUEMA Y MIGRACIÓN SEGURO
+-- Copia y pega en: Supabase → SQL Editor → New Query → Run
 -- NO borra ni altera datos de las tablas existentes.
--- NO incluye ningún 'INSERT INTO' (agrega tus datos desde la App o Supabase)
 -- ============================================================
 
--- 1. AGREGAR COLUMNAS FALTANTES A TABLAS EXISTENTES (Si no existen)
-ALTER TABLE roles ADD COLUMN IF NOT EXISTS hora_ingreso_predeterminada TIME DEFAULT '08:00';
-ALTER TABLE roles ADD COLUMN IF NOT EXISTS hora_salida_predeterminada TIME DEFAULT '19:00';
-ALTER TABLE roles ALTER COLUMN horas_jornada_normal SET DEFAULT 10;
-
-ALTER TABLE empleados ADD COLUMN IF NOT EXISTS rol_id UUID REFERENCES roles(id) ON DELETE SET NULL;
-
-ALTER TABLE configuracion_precios ALTER COLUMN horas_jornada_normal SET DEFAULT 10;
-
--- 2. CREACIÓN DE TABLAS (Solo las crea si aún no existen)
+-- 1. CREACIÓN DE TABLAS (Solo las crea si no existen)
 CREATE TABLE IF NOT EXISTS roles (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   nombre TEXT NOT NULL,
@@ -59,6 +49,15 @@ CREATE TABLE IF NOT EXISTS configuracion_precios (
   horas_jornada_normal INTEGER NOT NULL DEFAULT 10,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 2. ASEGURAR COLUMNAS SI LAS TABLAS YA EXISTÍAN DE ANTES
+ALTER TABLE roles ADD COLUMN IF NOT EXISTS hora_ingreso_predeterminada TIME DEFAULT '08:00';
+ALTER TABLE roles ADD COLUMN IF NOT EXISTS hora_salida_predeterminada TIME DEFAULT '19:00';
+ALTER TABLE roles ALTER COLUMN horas_jornada_normal SET DEFAULT 10;
+
+ALTER TABLE empleados ADD COLUMN IF NOT EXISTS rol_id UUID REFERENCES roles(id) ON DELETE SET NULL;
+
+ALTER TABLE configuracion_precios ALTER COLUMN horas_jornada_normal SET DEFAULT 10;
 
 -- 3. POLÍTICAS DE SEGURIDAD (RLS)
 ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
