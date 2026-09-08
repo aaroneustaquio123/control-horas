@@ -1,0 +1,201 @@
+<div class="roles-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-title-box">
+      <h1>Gestión de Roles</h1>
+      <p class="subtitle">Administra los roles del personal, sus precios por hora y sus horarios predeterminados.</p>
+    </div>
+    <button class="btn-primary" (click)="openNewRole()" id="btn-add-role">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+      </svg>
+      Nuevo Rol
+    </button>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="successMsg()" class="alert alert-success">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    <span>{{ successMsg() }}</span>
+  </div>
+
+  <div *ngIf="error()" class="alert alert-error">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+    <span>{{ error() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando roles...</p>
+  </div>
+
+  <!-- Roles Content -->
+  <div *ngIf="!loading()" class="content-body">
+    <!-- Empty State -->
+    <div *ngIf="roles().length === 0" class="empty-state">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
+        </svg>
+      </div>
+      <h3>No hay roles registrados</h3>
+      <p>Crea el primer rol de personal para definir tarifas por hora y horarios predeterminados.</p>
+      <button class="btn-primary" (click)="openNewRole()">+ Agregar Rol</button>
+    </div>
+
+    <!-- Roles Grid -->
+    <div *ngIf="roles().length > 0" class="roles-grid">
+      <div *ngFor="let rol of roles()" class="role-card">
+        <div class="role-card-header">
+          <div class="role-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
+            </svg>
+          </div>
+          <div class="role-info">
+            <h3 class="role-name">{{ rol.nombre }}</h3>
+            <p class="role-desc">{{ rol.descripcion || 'Sin descripción' }}</p>
+          </div>
+        </div>
+
+        <div class="role-metrics">
+          <div class="metric-box">
+            <span class="metric-lbl">Hora Normal</span>
+            <span class="metric-val text-primary">{{ formatCurrency(rol.precio_hora_normal) }}</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-lbl">Hora Extra</span>
+            <span class="metric-val text-amber">{{ formatCurrency(rol.precio_hora_extra) }}</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-lbl">Horario Habitual</span>
+            <span class="metric-val text-slate">{{ rol.hora_ingreso_predeterminada || '08:00' }} - {{ rol.hora_salida_predeterminada || '19:00' }}</span>
+          </div>
+        </div>
+
+        <div class="role-card-actions">
+          <button class="btn-icon btn-edit" (click)="openEditRole(rol)" title="Editar Rol">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            Editar Rol
+          </button>
+          <button class="btn-icon btn-delete" (click)="confirmDeleteRole(rol.id!)" title="Eliminar Rol">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Crear / Editar Rol -->
+<div *ngIf="showRoleModal()" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>{{ editingRole() ? 'Editar Rol' : 'Nuevo Rol' }}</h2>
+      <button class="btn-close" (click)="closeRoleModal()">✕</button>
+    </div>
+
+    <form (ngSubmit)="saveRole()" class="modal-form">
+      <div class="form-group">
+        <label for="role-name">Nombre del Rol *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="roleForm.nombre" 
+          name="nombre"
+          required 
+          placeholder="Ej: Estampado, Máquina, Acabado, Corte" 
+          id="role-name" 
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="role-desc">Descripción (Opcional)</label>
+        <input 
+          type="text" 
+          [(ngModel)]="roleForm.descripcion" 
+          name="descripcion"
+          placeholder="Ej: Operario de máquinas industriales" 
+          id="role-desc" 
+        />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-6">
+          <label for="role-normal-price">Precio Hora Normal (S/.) *</label>
+          <input 
+            type="number" 
+            [(ngModel)]="roleForm.precio_hora_normal" 
+            name="precio_hora_normal"
+            min="0" 
+            step="0.10" 
+            placeholder="7.50" 
+            id="role-normal-price" 
+            required
+          />
+        </div>
+        <div class="form-group col-6">
+          <label for="role-extra-price">Precio Hora Extra (S/.) *</label>
+          <input 
+            type="number" 
+            [(ngModel)]="roleForm.precio_hora_extra" 
+            name="precio_hora_extra"
+            min="0" 
+            step="0.10" 
+            placeholder="11.25" 
+            id="role-extra-price" 
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-6">
+          <label for="role-ingreso">Hora Ingreso Habitual *</label>
+          <input 
+            type="time" 
+            [(ngModel)]="roleForm.hora_ingreso_predeterminada" 
+            name="hora_ingreso_predeterminada"
+            id="role-ingreso" 
+            required
+          />
+        </div>
+        <div class="form-group col-6">
+          <label for="role-salida">Hora Salida Habitual *</label>
+          <input 
+            type="time" 
+            [(ngModel)]="roleForm.hora_salida_predeterminada" 
+            name="hora_salida_predeterminada"
+            id="role-salida" 
+            required
+          />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeRoleModal()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="savingRole()">
+          {{ savingRole() ? 'Guardando...' : (editingRole() ? 'Guardar Cambios' : 'Crear Rol') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar Eliminación -->
+<div *ngIf="showDeleteConfirm()" class="modal-backdrop">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2>Eliminar Rol</h2>
+      <button class="btn-close" (click)="cancelDelete()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>¿Estás seguro de que deseas eliminar este rol?</p>
+      <p class="text-subtle">Los empleados asignados conservarán sus datos y su rol pasará a "Sin Rol".</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
+      <button class="btn-danger" (click)="deleteRole()">Eliminar</button>
+    </div>
+  </div>
+</div>

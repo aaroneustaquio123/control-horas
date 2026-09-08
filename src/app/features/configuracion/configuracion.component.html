@@ -6,84 +6,25 @@
 
   <div class="page-header">
     <div>
-      <h1 class="page-title">Configuración del Sistema</h1>
-      <p class="page-subtitle">Gestiona los roles del personal (Estampado, Máquina, etc.), tarifas y parámetros</p>
+      <h1 class="page-title">Configuración General</h1>
+      <p class="page-subtitle">Gestiona las tarifas base predeterminadas y los parámetros del sistema</p>
     </div>
-    <button class="btn-primary" (click)="openNewRole()" id="btn-nuevo-rol">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-      Nuevo Rol / Puesto
-    </button>
   </div>
 
   <div class="loading-block" *ngIf="loading()"><div class="loader"></div></div>
 
   <div class="config-grid" *ngIf="!loading()">
-    <!-- SECCIÓN ROLES DE EMPLEADOS -->
-    <div class="section-card full-width">
-      <div class="card-header">
-        <div class="card-section-title">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
-          </svg>
-          Roles de Empleados Guardados (Tarifas y Horarios)
-        </div>
-        <p class="section-desc">Crea y edita los puestos de trabajo. Cada rol define el precio por hora en Soles (S/.) y su horario predeterminado.</p>
-      </div>
-
-      <div class="roles-grid">
-        <div class="role-card" *ngFor="let rol of roles()">
-          <div class="role-card-header">
-            <h3 class="role-title">{{ rol.nombre }}</h3>
-            <span class="role-badge">{{ rol.horas_jornada_normal }}h jornada</span>
-          </div>
-          <p class="role-desc">{{ rol.descripcion || 'Sin descripción' }}</p>
-          
-          <div class="role-metrics">
-            <div class="metric-box">
-              <span class="metric-lbl">Hora Normal</span>
-              <span class="metric-val text-primary">{{ formatCurrency(rol.precio_hora_normal) }}</span>
-            </div>
-            <div class="metric-box">
-              <span class="metric-lbl">Hora Extra</span>
-              <span class="metric-val text-amber">{{ formatCurrency(rol.precio_hora_extra) }}</span>
-            </div>
-            <div class="metric-box">
-              <span class="metric-lbl">Horario Habitual</span>
-              <span class="metric-val text-slate">{{ rol.hora_ingreso_predeterminada || '08:00' }} - {{ rol.hora_salida_predeterminada || '19:00' }}</span>
-            </div>
-          </div>
-
-          <div class="role-card-actions">
-            <button class="btn-icon btn-edit" (click)="openEditRole(rol)">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-              Editar Rol
-            </button>
-            <button class="btn-icon btn-delete" (click)="confirmDeleteRole(rol.id!)">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-              Eliminar
-            </button>
-          </div>
-        </div>
-
-        <!-- Empty state for roles -->
-        <div class="roles-empty" *ngIf="roles().length === 0">
-          <p>No hay roles guardados aún. Agrega roles como <strong>Estampado</strong>, <strong>Máquina</strong> o <strong>Acabado</strong>.</p>
-          <button class="btn-secondary" (click)="openNewRole()">+ Crear Primer Rol</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- SECCIÓN CONFIGURACIÓN GENERAL (FALLBACK) -->
+    <!-- SECCIÓN CONFIGURACIÓN GENERAL -->
     <div class="config-layout">
       <div class="config-card">
         <div class="card-section-title">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
           </svg>
-          Precios Generales por Defecto (Soles S/.)
+          Precios Base por Defecto (Soles S/.)
         </div>
 
-        <p class="field-hint mb-3">Se aplican únicamente a empleados que no tengan un rol específico asignado.</p>
+        <p class="field-hint mb-3">Se aplican únicamente como tarifa base a empleados que no tengan un rol específico asignado.</p>
 
         <div class="form-group">
           <label>Precio hora normal por defecto (S/.)</label>
@@ -145,11 +86,11 @@
       <div class="info-cards">
         <div class="info-card">
           <div class="info-icon icon-blue">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
           </div>
           <div>
-            <p class="info-title">Roles y Precios por Hora</p>
-            <p class="info-text">Al crear un empleado y asignarle un rol (ej: Estampado), el sistema usará automáticamente las tarifas en Soles y los horarios predeterminados de ese rol.</p>
+            <p class="info-title">Gestión de Roles</p>
+            <p class="info-text">Para crear y administrar los puestos de trabajo (Estampado, Máquina, Acabado, etc.), dirígete a la sección <strong>Roles</strong> en el menú lateral.</p>
           </div>
         </div>
         <div class="info-card">
@@ -164,84 +105,4 @@
       </div>
     </div>
   </div>
-
-  <!-- MODAL CREAR / EDITAR ROL -->
-  <div class="modal-backdrop" *ngIf="showRoleModal()" (click)="closeRoleModal()"></div>
-  <div class="modal" *ngIf="showRoleModal()">
-    <div class="modal-header">
-      <h2>{{ editingRole() ? 'Editar Rol / Puesto' : 'Nuevo Rol / Puesto' }}</h2>
-      <button class="btn-close" (click)="closeRoleModal()">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Nombre del Rol / Puesto *</label>
-        <input type="text" [(ngModel)]="roleForm.nombre" placeholder="Ej: Estampado, Máquina, Corte, Acabado..." id="role-name" />
-      </div>
-
-      <div class="form-group">
-        <label>Descripción breve</label>
-        <input type="text" [(ngModel)]="roleForm.descripcion" placeholder="Ej: Operario de máquinas de estampar textil" id="role-desc" />
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Precio Hora Normal (S/.) *</label>
-          <div class="input-prefix-wrap">
-            <span class="input-prefix">S/.</span>
-            <input type="number" [(ngModel)]="roleForm.precio_hora_normal" min="0" step="0.10" placeholder="7.50" id="role-normal-price" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Precio Hora Extra (S/.) *</label>
-          <div class="input-prefix-wrap">
-            <span class="input-prefix">S/.</span>
-            <input type="number" [(ngModel)]="roleForm.precio_hora_extra" min="0" step="0.10" placeholder="11.25" id="role-extra-price" />
-          </div>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Hora Ingreso Habitual</label>
-          <input type="time" [(ngModel)]="roleForm.hora_ingreso_predeterminada" id="role-ingreso" />
-        </div>
-        <div class="form-group">
-          <label>Hora Salida Habitual</label>
-          <input type="time" [(ngModel)]="roleForm.hora_salida_predeterminada" id="role-salida" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Horas Jornada Normal Diaria</label>
-        <input type="number" [(ngModel)]="roleForm.horas_jornada_normal" min="1" max="24" step="1" id="role-jornada" />
-      </div>
-
-      <div class="error-msg" *ngIf="error()">{{ error() }}</div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeRoleModal()" [disabled]="savingRole()">Cancelar</button>
-      <button class="btn-primary" (click)="saveRole()" [disabled]="savingRole()" id="btn-guardar-rol">
-        <span class="spinner" *ngIf="savingRole()"></span>
-        {{ savingRole() ? 'Guardando...' : 'Guardar Rol' }}
-      </button>
-    </div>
-  </div>
-
-  <!-- DELETE ROLE CONFIRM MODAL -->
-  <div class="modal-backdrop" *ngIf="showDeleteConfirm()" (click)="cancelDeleteRole()"></div>
-  <div class="modal modal-sm" *ngIf="showDeleteConfirm()">
-    <div class="modal-header">
-      <h2>Confirmar eliminación de Rol</h2>
-    </div>
-    <div class="modal-body">
-      <p class="confirm-text">¿Estás seguro de que deseas eliminar este rol? Esta acción no se puede deshacer.</p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="cancelDeleteRole()">Cancelar</button>
-      <button class="btn-danger" (click)="doDeleteRole()" id="btn-confirmar-eliminar-rol">Sí, eliminar</button>
-    </div>
-  </div>
 </div>
-
