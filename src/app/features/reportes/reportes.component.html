@@ -1,0 +1,97 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Reportes</h1>
+      <p class="page-subtitle">Totales de horas y costos por período</p>
+    </div>
+  </div>
+
+  <!-- Period selector -->
+  <div class="periodo-bar">
+    <div class="periodo-tabs">
+      <button class="tab-btn" [class.active]="periodoTipo() === 'semana'" (click)="setPeriodo('semana')" id="tab-semana">Esta semana</button>
+      <button class="tab-btn" [class.active]="periodoTipo() === 'mes'" (click)="setPeriodo('mes')" id="tab-mes">Este mes</button>
+      <button class="tab-btn" [class.active]="periodoTipo() === 'personalizado'" (click)="setPeriodo('personalizado')" id="tab-personalizado">Personalizado</button>
+    </div>
+
+    <div class="custom-range" *ngIf="periodoTipo() === 'personalizado'">
+      <div class="filter-group">
+        <label>Desde</label>
+        <input type="date" [(ngModel)]="fechaInicio" (ngModelChange)="fechaInicio.set($event)" id="reporte-desde" />
+      </div>
+      <div class="filter-group">
+        <label>Hasta</label>
+        <input type="date" [(ngModel)]="fechaFin" (ngModelChange)="fechaFin.set($event)" id="reporte-hasta" />
+      </div>
+      <button class="btn-primary btn-sm-p" (click)="generar()" id="btn-generar-reporte">Generar</button>
+    </div>
+  </div>
+
+  <!-- Date range display -->
+  <div class="date-range-badge" *ngIf="fechaInicio() && fechaFin()">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+    {{ fechaInicio() }} → {{ fechaFin() }}
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-block" *ngIf="loading()"><div class="loader"></div></div>
+
+  <ng-container *ngIf="!loading()">
+    <!-- Total General Card -->
+    <div class="total-card" *ngIf="resumenes().length > 0">
+      <div class="total-left">
+        <p class="total-label">Total a pagar en el período</p>
+        <p class="total-value">{{ formatCurrency(totalGeneral()) }}</p>
+      </div>
+      <div class="total-stats">
+        <div class="total-stat">
+          <span class="ts-num">{{ resumenes().length }}</span>
+          <span class="ts-label">Empleados</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Per-employee cards -->
+    <div class="empleados-reportes" *ngIf="resumenes().length > 0">
+      <div class="emp-reporte-card" *ngFor="let r of resumenes(); let i = index">
+        <div class="emp-reporte-header">
+          <div class="emp-avatar-rp">{{ initials(r.empleado) }}</div>
+          <div class="emp-reporte-info">
+            <h3>{{ r.empleado.nombre }} {{ r.empleado.apellido }}</h3>
+            <p>{{ r.empleado.cargo || 'Sin cargo' }}</p>
+          </div>
+          <div class="emp-rank" *ngIf="i === 0">⭐</div>
+        </div>
+
+        <div class="emp-reporte-stats">
+          <div class="rp-stat">
+            <span class="rp-label">Días trabajados</span>
+            <span class="rp-val">{{ r.dias_trabajados }}</span>
+          </div>
+          <div class="rp-stat">
+            <span class="rp-label">Horas normales</span>
+            <span class="rp-val blue">{{ r.total_horas_normales }}h</span>
+          </div>
+          <div class="rp-stat">
+            <span class="rp-label">Horas extras</span>
+            <span class="rp-val orange">{{ r.total_horas_extras }}h</span>
+          </div>
+        </div>
+
+        <div class="emp-reporte-total">
+          <div class="reporte-desglose">
+            <span>Normal: {{ formatCurrency(r.total_horas_normales * config().precio_hora_normal) }}</span>
+            <span>Extra: {{ formatCurrency(r.total_horas_extras * config().precio_hora_extra) }}</span>
+          </div>
+          <div class="reporte-total-val">{{ formatCurrency(r.total_costo) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" *ngIf="resumenes().length === 0">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg>
+      <p>No hay datos para el período seleccionado.</p>
+    </div>
+  </ng-container>
+</div>

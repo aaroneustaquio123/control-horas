@@ -1,0 +1,198 @@
+<div class="page">
+  <!-- Toast -->
+  <div class="toast success" *ngIf="successMsg()">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    {{ successMsg() }}
+  </div>
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Registros de Horas</h1>
+      <p class="page-subtitle">Controla las entradas, salidas y horas extras</p>
+    </div>
+    <button class="btn-primary" (click)="openNew()" id="btn-nuevo-registro">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      Nuevo Registro
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label>Desde</label>
+      <input type="date" [(ngModel)]="filtroFechaInicio" (change)="filtroFechaInicio.set($any($event.target).value)" id="filtro-fecha-inicio" />
+    </div>
+    <div class="filter-group">
+      <label>Hasta</label>
+      <input type="date" [(ngModel)]="filtroFechaFin" (change)="filtroFechaFin.set($any($event.target).value)" id="filtro-fecha-fin" />
+    </div>
+    <div class="filter-group">
+      <label>Empleado</label>
+      <select [(ngModel)]="filtroEmpleado" (change)="filtroEmpleado.set($any($event.target).value)" id="filtro-empleado">
+        <option value="">Todos</option>
+        <option *ngFor="let e of empleados()" [value]="e.id">{{ e.nombre }} {{ e.apellido }}</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="btn-filter" (click)="applyFilters()" id="btn-filtrar">Filtrar</button>
+      <button class="btn-clear" (click)="clearFilters()" id="btn-limpiar">Limpiar</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-block" *ngIf="loading()"><div class="loader"></div></div>
+
+  <!-- Table -->
+  <div class="table-card" *ngIf="!loading()">
+    <div class="table-responsive" *ngIf="registros().length > 0; else noRegistros">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Empleado</th>
+            <th>Fecha</th>
+            <th>Entrada</th>
+            <th>Salida</th>
+            <th>H. Normales</th>
+            <th>H. Extras</th>
+            <th>Costo Normal</th>
+            <th>Costo Extra</th>
+            <th>Total</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of registros()">
+            <td>
+              <div class="emp-cell">
+                <div class="emp-avatar">{{ initials(r) }}</div>
+                <span>{{ r.empleado?.nombre }} {{ r.empleado?.apellido }}</span>
+              </div>
+            </td>
+            <td>{{ r.fecha }}</td>
+            <td><span class="badge badge-blue">{{ formatHora(r.hora_entrada) }}</span></td>
+            <td>
+              <span class="badge badge-green" *ngIf="r.hora_salida">{{ formatHora(r.hora_salida) }}</span>
+              <span class="badge badge-gray" *ngIf="!r.hora_salida">Pendiente</span>
+            </td>
+            <td>{{ r.horas_normales || 0 }}h</td>
+            <td>
+              <span class="badge badge-orange" *ngIf="(r.horas_extras || 0) > 0">+{{ r.horas_extras }}h</span>
+              <span *ngIf="(r.horas_extras || 0) === 0">—</span>
+            </td>
+            <td>{{ formatCurrency(r.costo_normal || 0) }}</td>
+            <td>{{ formatCurrency(r.costo_extra || 0) }}</td>
+            <td class="total-cell">{{ formatCurrency(r.costo_total || 0) }}</td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-sm btn-edit" (click)="openEdit(r)" [attr.aria-label]="'Editar registro de ' + (r.empleado?.nombre)">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </button>
+                <button class="btn-sm btn-delete" (click)="confirmDelete(r.id!)" [attr.aria-label]="'Eliminar registro'">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noRegistros>
+      <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+        <p>No hay registros para los filtros seleccionados.</p>
+        <button class="btn-primary" (click)="openNew()">Crear registro</button>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Modal Registro -->
+  <div class="modal-backdrop" *ngIf="showModal()" (click)="closeModal()"></div>
+  <div class="modal" *ngIf="showModal()">
+    <div class="modal-header">
+      <h2>{{ editingId() ? 'Editar Registro' : 'Nuevo Registro de Horas' }}</h2>
+      <button class="btn-close" (click)="closeModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Empleado *</label>
+        <select [(ngModel)]="form.empleado_id" id="modal-empleado">
+          <option value="">-- Seleccionar empleado --</option>
+          <option *ngFor="let e of empleados()" [value]="e.id">{{ e.nombre }} {{ e.apellido }}</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha *</label>
+          <input type="date" [(ngModel)]="form.fecha" id="modal-fecha" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Hora de Entrada *</label>
+          <input type="time" [(ngModel)]="form.hora_entrada" (ngModelChange)="updatePreview()" id="modal-hora-entrada" />
+        </div>
+        <div class="form-group">
+          <label>Hora de Salida</label>
+          <input type="time" [(ngModel)]="form.hora_salida" (ngModelChange)="updatePreview()" id="modal-hora-salida" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Observaciones</label>
+        <textarea [(ngModel)]="form.observaciones" placeholder="Notas adicionales..." rows="2" id="modal-obs"></textarea>
+      </div>
+
+      <!-- Live Preview -->
+      <div class="preview-card" *ngIf="preview()">
+        <p class="preview-title">Vista previa del cálculo</p>
+        <div class="preview-grid">
+          <div class="preview-item">
+            <span class="preview-label">Horas normales</span>
+            <span class="preview-val blue">{{ preview()!.horas_normales }}h</span>
+          </div>
+          <div class="preview-item">
+            <span class="preview-label">Horas extras</span>
+            <span class="preview-val orange">{{ preview()!.horas_extras }}h</span>
+          </div>
+          <div class="preview-item">
+            <span class="preview-label">Costo normal</span>
+            <span class="preview-val">{{ formatCurrency(preview()!.costo_normal) }}</span>
+          </div>
+          <div class="preview-item">
+            <span class="preview-label">Costo extra</span>
+            <span class="preview-val">{{ formatCurrency(preview()!.costo_extra) }}</span>
+          </div>
+        </div>
+        <div class="preview-total">
+          <span>Total a pagar</span>
+          <span class="preview-total-val">{{ formatCurrency(preview()!.costo_total) }}</span>
+        </div>
+      </div>
+
+      <div class="error-msg" *ngIf="error()">{{ error() }}</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
+      <button class="btn-primary" (click)="save()" [disabled]="saving()" id="btn-guardar-registro">
+        <span class="spinner" *ngIf="saving()"></span>
+        {{ saving() ? 'Guardando...' : 'Guardar Registro' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Delete Confirm -->
+  <div class="modal-backdrop" *ngIf="showDeleteConfirm()" (click)="cancelDelete()"></div>
+  <div class="modal modal-sm" *ngIf="showDeleteConfirm()">
+    <div class="modal-header"><h2>Eliminar Registro</h2></div>
+    <div class="modal-body">
+      <p class="confirm-text">¿Eliminar este registro de horas? Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
+      <button class="btn-danger" (click)="doDelete()" id="btn-confirmar-eliminar-registro">Sí, eliminar</button>
+    </div>
+  </div>
+</div>

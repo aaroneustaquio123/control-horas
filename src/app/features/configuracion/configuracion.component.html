@@ -1,0 +1,121 @@
+<div class="page">
+  <div class="toast success" *ngIf="successMsg()">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    {{ successMsg() }}
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Configuración</h1>
+      <p class="page-subtitle">Establece los precios y parámetros del sistema</p>
+    </div>
+  </div>
+
+  <div class="loading-block" *ngIf="loading()"><div class="loader"></div></div>
+
+  <div class="config-layout" *ngIf="!loading()">
+    <!-- Main form -->
+    <div class="config-card">
+      <div class="card-section-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+        </svg>
+        Precios por Hora
+      </div>
+
+      <div class="form-group">
+        <label>Precio hora normal (RD$)</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">RD$</span>
+          <input
+            type="number"
+            [(ngModel)]="config.precio_hora_normal"
+            min="0" step="0.01"
+            placeholder="0.00"
+            id="precio-hora-normal"
+          />
+        </div>
+        <p class="field-hint">Ejemplo: 8h normal = {{ exampleNormal() }}</p>
+      </div>
+
+      <div class="form-group">
+        <label>Precio hora extra (RD$)</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">RD$</span>
+          <input
+            type="number"
+            [(ngModel)]="config.precio_hora_extra"
+            min="0" step="0.01"
+            placeholder="0.00"
+            id="precio-hora-extra"
+          />
+        </div>
+        <p class="field-hint">Ejemplo: 2h extra = {{ exampleExtra() }}</p>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="card-section-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
+        </svg>
+        Jornada Laboral
+      </div>
+
+      <div class="form-group">
+        <label>Horas de jornada normal</label>
+        <input
+          type="number"
+          [(ngModel)]="config.horas_jornada_normal"
+          min="1" max="24" step="1"
+          id="horas-jornada"
+        />
+        <p class="field-hint">Las horas trabajadas por encima de este valor se contarán como extras.</p>
+      </div>
+
+      <div class="error-msg" *ngIf="error()">{{ error() }}</div>
+
+      <button class="btn-primary btn-full" (click)="save()" [disabled]="saving()" id="btn-guardar-config">
+        <span class="spinner" *ngIf="saving()"></span>
+        {{ saving() ? 'Guardando...' : 'Guardar Configuración' }}
+      </button>
+    </div>
+
+    <!-- Info card -->
+    <div class="info-cards">
+      <div class="info-card">
+        <div class="info-icon icon-purple">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        </div>
+        <div>
+          <p class="info-title">Cómo funciona</p>
+          <p class="info-text">Al registrar la hora de entrada y salida de un empleado, el sistema calcula automáticamente cuántas horas son normales y cuántas son extras, basándose en la jornada configurada aquí.</p>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon icon-orange">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+        </div>
+        <div>
+          <p class="info-title">Precios configurados</p>
+          <p class="info-text">Los cambios aquí <strong>no</strong> afectan registros anteriores. Solo se aplican a los nuevos registros que crees a partir de ahora.</p>
+        </div>
+      </div>
+      <div class="summary-card">
+        <p class="summary-title">Configuración actual</p>
+        <div class="summary-row">
+          <span>Hora normal</span>
+          <span class="summary-val">{{ config.precio_hora_normal | currency:'DOP':'symbol':'1.2-2' }}</span>
+        </div>
+        <div class="summary-row">
+          <span>Hora extra</span>
+          <span class="summary-val orange">{{ config.precio_hora_extra | currency:'DOP':'symbol':'1.2-2' }}</span>
+        </div>
+        <div class="summary-row">
+          <span>Jornada normal</span>
+          <span class="summary-val blue">{{ config.horas_jornada_normal }}h / día</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
