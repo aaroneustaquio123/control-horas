@@ -1,0 +1,135 @@
+<div class="page">
+  <!-- Success toast -->
+  <div class="toast success" *ngIf="successMsg()">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    {{ successMsg() }}
+  </div>
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Empleados</h1>
+      <p class="page-subtitle">Gestiona el personal de tu negocio</p>
+    </div>
+    <button class="btn-primary" (click)="openNew()" id="btn-nuevo-empleado">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      Nuevo Empleado
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    </svg>
+    <input
+      type="text"
+      placeholder="Buscar por nombre, apellido o cargo..."
+      (input)="onSearch($event)"
+      id="search-empleados"
+    />
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-block" *ngIf="loading()">
+    <div class="loader"></div>
+  </div>
+
+  <!-- Employees Grid -->
+  <div class="employees-grid" *ngIf="!loading()">
+    <div class="emp-card" *ngFor="let emp of filteredEmpleados()">
+      <div class="emp-card-header">
+        <div class="emp-avatar-lg" [class.inactive]="!emp.activo">
+          {{ initials(emp) }}
+        </div>
+        <div class="emp-badge" [class.active]="emp.activo" [class.inactive]="!emp.activo">
+          {{ emp.activo ? 'Activo' : 'Inactivo' }}
+        </div>
+      </div>
+      <div class="emp-card-body">
+        <h3 class="emp-name">{{ emp.nombre }} {{ emp.apellido }}</h3>
+        <p class="emp-cargo">{{ emp.cargo || 'Sin cargo asignado' }}</p>
+      </div>
+      <div class="emp-card-actions">
+        <button class="btn-icon btn-edit" (click)="openEdit(emp)" [attr.aria-label]="'Editar ' + emp.nombre">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          Editar
+        </button>
+        <button class="btn-icon btn-toggle" (click)="toggleActivo(emp)" [attr.aria-label]="emp.activo ? 'Desactivar' : 'Activar'">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h10c2.76 0 5-2.24 5-5s-2.24-5-5-5zm0 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h10c1.65 0 3 1.35 3 3s-1.35 3-3 3zm0-4.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/></svg>
+          {{ emp.activo ? 'Desactivar' : 'Activar' }}
+        </button>
+        <button class="btn-icon btn-delete" (click)="confirmDelete(emp.id!)" [attr.aria-label]="'Eliminar ' + emp.nombre">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          Eliminar
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" *ngIf="filteredEmpleados().length === 0">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+      </svg>
+      <p *ngIf="searchTerm()">No se encontraron empleados con "{{ searchTerm() }}"</p>
+      <p *ngIf="!searchTerm()">No hay empleados registrados aún.</p>
+      <button class="btn-primary" (click)="openNew()" *ngIf="!searchTerm()">Agregar primer empleado</button>
+    </div>
+  </div>
+
+  <!-- Modal Crear/Editar -->
+  <div class="modal-backdrop" *ngIf="showModal()" (click)="closeModal()"></div>
+  <div class="modal" *ngIf="showModal()">
+    <div class="modal-header">
+      <h2>{{ editingEmpleado() ? 'Editar Empleado' : 'Nuevo Empleado' }}</h2>
+      <button class="btn-close" (click)="closeModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre *</label>
+          <input type="text" [(ngModel)]="form.nombre" placeholder="Ej: María" id="input-nombre" />
+        </div>
+        <div class="form-group">
+          <label>Apellido *</label>
+          <input type="text" [(ngModel)]="form.apellido" placeholder="Ej: García" id="input-apellido" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Cargo</label>
+        <input type="text" [(ngModel)]="form.cargo" placeholder="Ej: Vendedora, Cajera..." id="input-cargo" />
+      </div>
+      <div class="form-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="form.activo" id="input-activo" />
+          <span>Empleado activo</span>
+        </label>
+      </div>
+      <div class="error-msg" *ngIf="error()">{{ error() }}</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
+      <button class="btn-primary" (click)="save()" [disabled]="saving()" id="btn-guardar-empleado">
+        <span class="spinner" *ngIf="saving()"></span>
+        {{ saving() ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal-backdrop" *ngIf="showDeleteConfirm()" (click)="cancelDelete()"></div>
+  <div class="modal modal-sm" *ngIf="showDeleteConfirm()">
+    <div class="modal-header">
+      <h2>Confirmar eliminación</h2>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-text">¿Estás segura de que deseas eliminar este empleado? Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
+      <button class="btn-danger" (click)="doDelete()" id="btn-confirmar-eliminar">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
