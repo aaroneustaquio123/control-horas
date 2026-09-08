@@ -35,8 +35,11 @@ export class DashboardComponent implements OnInit {
 
       const horasHoy = registros.reduce((sum, r) => sum + (r.horas_normales || 0) + (r.horas_extras || 0), 0);
       const costoHoy = registros.reduce((sum, r) => {
-        const normal = (r.horas_normales || 0) * config.precio_hora_normal;
-        const extra = (r.horas_extras || 0) * config.precio_hora_extra;
+        if (r.costo_total && r.costo_total > 0) return sum + r.costo_total;
+        const pNormal = r.empleado?.rol?.precio_hora_normal ?? config.precio_hora_normal;
+        const pExtra = r.empleado?.rol?.precio_hora_extra ?? config.precio_hora_extra;
+        const normal = (r.horas_normales || 0) * pNormal;
+        const extra = (r.horas_extras || 0) * pExtra;
         return sum + normal + extra;
       }, 0);
 
@@ -61,6 +64,6 @@ export class DashboardComponent implements OnInit {
   }
 
   formatCurrency(val: number): string {
-    return val.toLocaleString('es-DO', { style: 'currency', currency: 'DOP' });
+    return `S/. ${(val || 0).toFixed(2)}`;
   }
 }

@@ -34,6 +34,7 @@ export class RegistrosComponent implements OnInit {
 
   // Form
   form: Partial<RegistroHoras> = {};
+  selectedEmpleado = signal<Empleado | null>(null);
   preview = signal<{ horas_normales: number; horas_extras: number; costo_normal: number; costo_extra: number; costo_total: number } | null>(null);
 
   constructor(
@@ -43,12 +44,12 @@ export class RegistrosComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    const [empleados, config] = await Promise.all([
+    const [empleadosData, configData] = await Promise.all([
       this.empSvc.getActivos(),
       this.cfgSvc.get()
     ]);
-    this.empleados.set(empleados);
-    this.config.set(config);
+    this.empleados.set(empleadosData);
+    this.config.set(configData);
     await this.load();
   }
 
@@ -83,6 +84,7 @@ export class RegistrosComponent implements OnInit {
   openNew() {
     this.form = { fecha: new Date().toISOString().split('T')[0], hora_entrada: '', hora_salida: null, empleado_id: '', observaciones: '' };
     this.editingId.set(null);
+    this.selectedEmpleado.set(null);
     this.preview.set(null);
     this.error.set('');
     this.showModal.set(true);
@@ -91,6 +93,8 @@ export class RegistrosComponent implements OnInit {
   async openEdit(registro: RegistroHoras) {
     this.form = { ...registro };
     this.editingId.set(registro.id ?? null);
+    const emp = this.empleados().find(e => e.id === registro.empleado_id) ?? null;
+    this.selectedEmpleado.set(emp);
     this.error.set('');
     this.updatePreview();
     this.showModal.set(true);
@@ -99,16 +103,49 @@ export class RegistrosComponent implements OnInit {
   closeModal() {
     this.showModal.set(false);
     this.editingId.set(null);
+    this.selectedEmpleado.set(null);
     this.preview.set(null);
+  }
+
+  onEmpleadoSelect() {
+    const empId = this.form.empleado_id;
+    const emp = this.empleados().find(e => e.id === empId) ?? null;
+    this.selectedEmpleado.set(emp);
+
+    if (emp?.rol) {
+      // Auto-fill default role schedule if creating a new entry
+      if (!this.editingId()) {
+        this.form.hora_entrada = emp.rol.hora_ingreso_predeterminada || '08:00';
+        this.form.hora_salida = emp.rol.hora_salida_predeterminada || '19:00';
+      }
+    }
+    this.updatePreview();
+  }
+
+  getTarifasActuales(): { precioNormal: number; precioExtra: number; jornadaNormal: number } {
+    const emp = this.selectedEmpleado();
+    const cfg = this.config();
+    if (emp?.rol) {
+      return {
+        precioNormal: emp.rol.precio_hora_normal,
+        precioExtra: emp.rol.precio_hora_extra,
+        jornadaNormal: emp.rol.horas_jornada_normal
+      };
+    }
+    return {
+      precioNormal: cfg.precio_hora_normal,
+      precioExtra: cfg.precio_hora_extra,
+      jornadaNormal: cfg.horas_jornada_normal
+    };
   }
 
   updatePreview() {
     const { hora_entrada, hora_salida } = this.form;
     if (hora_entrada && hora_salida) {
-      const cfg = this.config();
-      const calc = this.regSvc.calcularHoras(hora_entrada, hora_salida as string, cfg.horas_jornada_normal);
-      const costo_normal = calc.horas_normales * cfg.precio_hora_normal;
-      const costo_extra = calc.horas_extras * cfg.precio_hora_extra;
+      const { precioNormal, precioExtra, jornadaNormal } = this.getTarifasActuales();
+      const calc = this.regSvc.calcularHoras(hora_entrada, hora_salida as string, jornadaNormal);
+      const costo_normal = calc.horas_normales * precioNormal;
+      const costo_extra = calc.horas_extras * precioExtra;
       this.preview.set({
         horas_normales: calc.horas_normales,
         horas_extras: calc.horas_extras,
@@ -129,13 +166,16 @@ export class RegistrosComponent implements OnInit {
     this.saving.set(true);
     this.error.set('');
     try {
-      const cfg = this.config();
+      const { precioNormal, precioExtra, jornadaNormal } = this.getTarifasActuales();
       let horas_normales = 0, horas_extras = 0;
       if (this.form.hora_salida) {
-        const calc = this.regSvc.calcularHoras(this.form.hora_entrada!, this.form.hora_salida, cfg.horas_jornada_normal);
+        const calc = this.regSvc.calcularHoras(this.form.hora_entrada!, this.form.hora_salida, jornadaNormal);
         horas_normales = calc.horas_normales;
         horas_extras = calc.horas_extras;
       }
+      const costo_normal = Math.round(horas_normales * precioNormal * 100) / 100;
+      const costo_extra = Math.round(horas_extras * precioExtra * 100) / 100;
+
       const payload: Omit<RegistroHoras, 'id' | 'created_at' | 'empleado'> = {
         empleado_id: this.form.empleado_id!,
         fecha: this.form.fecha!,
@@ -143,9 +183,9 @@ export class RegistrosComponent implements OnInit {
         hora_salida: this.form.hora_salida ?? null,
         horas_normales,
         horas_extras,
-        costo_normal: horas_normales * cfg.precio_hora_normal,
-        costo_extra: horas_extras * cfg.precio_hora_extra,
-        costo_total: horas_normales * cfg.precio_hora_normal + horas_extras * cfg.precio_hora_extra,
+        costo_normal,
+        costo_extra,
+        costo_total: Math.round((costo_normal + costo_extra) * 100) / 100,
         observaciones: this.form.observaciones ?? ''
       };
       if (this.editingId()) {
@@ -199,12 +239,16 @@ export class RegistrosComponent implements OnInit {
   }
 
   formatCurrency(val: number): string {
-    return val.toLocaleString('es-DO', { style: 'currency', currency: 'DOP' });
+    return `S/. ${(val || 0).toFixed(2)}`;
   }
 
   nombreEmpleado(id: string): string {
     const e = this.empleados().find(emp => emp.id === id);
     return e ? `${e.nombre} ${e.apellido}` : '—';
+  }
+
+  rolEmpleado(r: RegistroHoras): string {
+    return r.empleado?.rol?.nombre ?? 'General';
   }
 
   initials(r: RegistroHoras): string {

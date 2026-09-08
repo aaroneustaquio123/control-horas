@@ -1,8 +1,22 @@
+export interface Rol {
+  id?: string;
+  nombre: string;
+  descripcion?: string;
+  precio_hora_normal: number;
+  precio_hora_extra: number;
+  horas_jornada_normal: number;
+  hora_ingreso_predeterminada?: string;
+  hora_salida_predeterminada?: string;
+  created_at?: string;
+}
+
 export interface Empleado {
   id?: string;
   nombre: string;
   apellido: string;
   cargo: string;
+  rol_id?: string | null;
+  rol?: Rol;
   activo: boolean;
   created_at?: string;
 }

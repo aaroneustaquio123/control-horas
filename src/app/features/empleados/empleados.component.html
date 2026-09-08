@@ -8,8 +8,8 @@
   <!-- Header -->
   <div class="page-header">
     <div>
-      <h1 class="page-title">Empleados</h1>
-      <p class="page-subtitle">Gestiona el personal de tu negocio</p>
+      <h1 class="page-title">Gestión de Empleados</h1>
+      <p class="page-subtitle">Gestiona el personal y sus roles asignados (Estampado, Máquina, Acabado, etc.)</p>
     </div>
     <button class="btn-primary" (click)="openNew()" id="btn-nuevo-empleado">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
@@ -24,7 +24,7 @@
     </svg>
     <input
       type="text"
-      placeholder="Buscar por nombre, apellido o cargo..."
+      placeholder="Buscar por nombre, apellido, cargo o rol..."
       (input)="onSearch($event)"
       id="search-empleados"
     />
@@ -42,13 +42,39 @@
         <div class="emp-avatar-lg" [class.inactive]="!emp.activo">
           {{ initials(emp) }}
         </div>
-        <div class="emp-badge" [class.active]="emp.activo" [class.inactive]="!emp.activo">
-          {{ emp.activo ? 'Activo' : 'Inactivo' }}
+        <div class="emp-badges">
+          <span class="role-tag" *ngIf="emp.rol">
+            {{ emp.rol.nombre }}
+          </span>
+          <span class="emp-badge" [class.active]="emp.activo" [class.inactive]="!emp.activo">
+            {{ emp.activo ? 'Activo' : 'Inactivo' }}
+          </span>
         </div>
       </div>
       <div class="emp-card-body">
         <h3 class="emp-name">{{ emp.nombre }} {{ emp.apellido }}</h3>
-        <p class="emp-cargo">{{ emp.cargo || 'Sin cargo asignado' }}</p>
+        <p class="emp-cargo">{{ emp.cargo || 'Sin cargo específico' }}</p>
+        
+        <div class="role-info-box" *ngIf="emp.rol; else noRole">
+          <div class="role-detail-row">
+            <span class="detail-label">Tarifa Normal:</span>
+            <span class="detail-val">{{ formatCurrency(emp.rol.precio_hora_normal) }}/h</span>
+          </div>
+          <div class="role-detail-row">
+            <span class="detail-label">Tarifa Extra:</span>
+            <span class="detail-val amber">{{ formatCurrency(emp.rol.precio_hora_extra) }}/h</span>
+          </div>
+          <div class="role-detail-row">
+            <span class="detail-label">Horario Habitual:</span>
+            <span class="detail-val">{{ emp.rol.hora_ingreso_predeterminada || '08:00' }} - {{ emp.rol.hora_salida_predeterminada || '19:00' }}</span>
+          </div>
+        </div>
+        <ng-template #noRole>
+          <div class="role-info-box warning">
+            <span class="detail-label">Sin Rol Asignado</span>
+            <span class="detail-sub">Se aplicará tarifa general por defecto</span>
+          </div>
+        </ng-template>
       </div>
       <div class="emp-card-actions">
         <button class="btn-icon btn-edit" (click)="openEdit(emp)" [attr.aria-label]="'Editar ' + emp.nombre">
@@ -97,10 +123,23 @@
           <input type="text" [(ngModel)]="form.apellido" placeholder="Ej: García" id="input-apellido" />
         </div>
       </div>
+      
       <div class="form-group">
-        <label>Cargo</label>
-        <input type="text" [(ngModel)]="form.cargo" placeholder="Ej: Vendedora, Cajera..." id="input-cargo" />
+        <label>Rol / Puesto Guardado *</label>
+        <select [(ngModel)]="form.rol_id" id="input-rol">
+          <option [ngValue]="null">-- Selecciona un Rol (Estampado, Máquina, etc.) --</option>
+          <option *ngFor="let r of roles()" [value]="r.id">
+            {{ r.nombre }} (Normal: {{ formatCurrency(r.precio_hora_normal) }} | Extra: {{ formatCurrency(r.precio_hora_extra) }})
+          </option>
+        </select>
+        <p class="field-hint">Al asignar un rol, la tarifa por hora y el horario de ingreso/salida se ajustarán automáticamente.</p>
       </div>
+
+      <div class="form-group">
+        <label>Cargo o Detalle Específico</label>
+        <input type="text" [(ngModel)]="form.cargo" placeholder="Ej: Operaria de Estampado Turno Mañana" id="input-cargo" />
+      </div>
+
       <div class="form-group checkbox-group">
         <label class="checkbox-label">
           <input type="checkbox" [(ngModel)]="form.activo" id="input-activo" />
@@ -113,7 +152,7 @@
       <button class="btn-secondary" (click)="closeModal()" [disabled]="saving()">Cancelar</button>
       <button class="btn-primary" (click)="save()" [disabled]="saving()" id="btn-guardar-empleado">
         <span class="spinner" *ngIf="saving()"></span>
-        {{ saving() ? 'Guardando...' : 'Guardar' }}
+        {{ saving() ? 'Guardando...' : 'Guardar Empleado' }}
       </button>
     </div>
   </div>
@@ -125,7 +164,7 @@
       <h2>Confirmar eliminación</h2>
     </div>
     <div class="modal-body">
-      <p class="confirm-text">¿Estás segura de que deseas eliminar este empleado? Esta acción no se puede deshacer.</p>
+      <p class="confirm-text">¿Estás seguro de que deseas eliminar este empleado? Esta acción no se puede deshacer.</p>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
@@ -133,3 +172,4 @@
     </div>
   </div>
 </div>
+

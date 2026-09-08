@@ -1,56 +1,46 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { Empleado } from '../models/models';
+import { Rol } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
-export class EmpleadosService {
-  private TABLE = 'empleados';
+export class RolesService {
+  private TABLE = 'roles';
 
   constructor(private sb: SupabaseService) {}
 
-  async getAll(): Promise<Empleado[]> {
+  async getAll(): Promise<Rol[]> {
     const { data, error } = await this.sb.client
       .from(this.TABLE)
-      .select('*, rol:roles(*)')
+      .select('*')
       .order('nombre', { ascending: true });
     if (error) throw error;
     return data ?? [];
   }
 
-  async getActivos(): Promise<Empleado[]> {
+  async getById(id: string): Promise<Rol | null> {
     const { data, error } = await this.sb.client
       .from(this.TABLE)
-      .select('*, rol:roles(*)')
-      .eq('activo', true)
-      .order('nombre', { ascending: true });
-    if (error) throw error;
-    return data ?? [];
-  }
-
-  async getById(id: string): Promise<Empleado | null> {
-    const { data, error } = await this.sb.client
-      .from(this.TABLE)
-      .select('*, rol:roles(*)')
+      .select('*')
       .eq('id', id)
       .single();
     if (error) throw error;
     return data;
   }
 
-  async create(empleado: Omit<Empleado, 'id' | 'created_at'>): Promise<Empleado> {
+  async create(rol: Omit<Rol, 'id' | 'created_at'>): Promise<Rol> {
     const { data, error } = await this.sb.client
       .from(this.TABLE)
-      .insert(empleado)
+      .insert(rol)
       .select()
       .single();
     if (error) throw error;
     return data;
   }
 
-  async update(id: string, empleado: Partial<Empleado>): Promise<Empleado> {
+  async update(id: string, rol: Partial<Rol>): Promise<Rol> {
     const { data, error } = await this.sb.client
       .from(this.TABLE)
-      .update(empleado)
+      .update(rol)
       .eq('id', id)
       .select()
       .single();

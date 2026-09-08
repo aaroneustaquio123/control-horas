@@ -82,8 +82,15 @@ export class ReportesComponent implements OnInit {
         const res = map.get(r.empleado_id)!;
         res.total_horas_normales += r.horas_normales ?? 0;
         res.total_horas_extras += r.horas_extras ?? 0;
-        res.total_costo += (r.horas_normales ?? 0) * cfg.precio_hora_normal
-                         + (r.horas_extras ?? 0) * cfg.precio_hora_extra;
+
+        if (r.costo_total && r.costo_total > 0) {
+          res.total_costo += r.costo_total;
+        } else {
+          const empRol = res.empleado.rol;
+          const pNormal = empRol?.precio_hora_normal ?? cfg.precio_hora_normal;
+          const pExtra = empRol?.precio_hora_extra ?? cfg.precio_hora_extra;
+          res.total_costo += (r.horas_normales ?? 0) * pNormal + (r.horas_extras ?? 0) * pExtra;
+        }
         res.dias_trabajados += 1;
       });
 
@@ -106,7 +113,7 @@ export class ReportesComponent implements OnInit {
   }
 
   formatCurrency(val: number): string {
-    return val.toLocaleString('es-DO', { style: 'currency', currency: 'DOP' });
+    return `S/. ${(val || 0).toFixed(2)}`;
   }
 
   initials(e: Empleado): string {

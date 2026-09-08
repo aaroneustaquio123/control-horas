@@ -11,7 +11,7 @@ export class RegistrosService {
   async getAll(fechaInicio?: string, fechaFin?: string): Promise<RegistroHoras[]> {
     let query = this.sb.client
       .from(this.TABLE)
-      .select(`*, empleado:empleados(*)`)
+      .select(`*, empleado:empleados(*, rol:roles(*))`)
       .order('fecha', { ascending: false })
       .order('created_at', { ascending: false });
 
@@ -26,7 +26,7 @@ export class RegistrosService {
   async getByEmpleado(empleadoId: string, fechaInicio?: string, fechaFin?: string): Promise<RegistroHoras[]> {
     let query = this.sb.client
       .from(this.TABLE)
-      .select(`*, empleado:empleados(*)`)
+      .select(`*, empleado:empleados(*, rol:roles(*))`)
       .eq('empleado_id', empleadoId)
       .order('fecha', { ascending: false });
 
@@ -77,16 +77,28 @@ export class RegistrosService {
     if (error) throw error;
   }
 
-  calcularHoras(horaEntrada: string, horaSalida: string, jornadaNormal: number): {
+  calcularHoras(horaEntrada: string, horaSalida: string, jornadaNormal: number = 10): {
     horas_normales: number;
     horas_extras: number;
   } {
     const [hE, mE] = horaEntrada.split(':').map(Number);
     const [hS, mS] = horaSalida.split(':').map(Number);
-    const totalMinutos = (hS * 60 + mS) - (hE * 60 + mE);
-    const totalHoras = Math.max(0, totalMinutos / 60);
-    const horas_normales = Math.min(totalHoras, jornadaNormal);
-    const horas_extras = Math.max(0, totalHoras - jornadaNormal);
+
+    const minEntrada = hE * 60 + mE;
+    const minSalida = hS * 60 + mS;
+    const totalMinutosReloj = Math.max(0, minSalida - minEntrada);
+
+    // Descuento de 1 hora de refrigerio (1:00 PM a 2:00 PM = 13:00 a 14:00 = 780 a 840 min)
+    const inicioAlmuerzo = 13 * 60; // 780 min
+    const finAlmuerzo = 14 * 60;    // 840 min
+    const overlapAlmuerzo = Math.max(0, Math.min(minSalida, finAlmuerzo) - Math.max(minEntrada, inicioAlmuerzo));
+
+    const minutosEfectivos = Math.max(0, totalMinutosReloj - overlapAlmuerzo);
+    const totalHorasEfectivas = minutosEfectivos / 60;
+
+    const horas_normales = Math.min(totalHorasEfectivas, jornadaNormal);
+    const horas_extras = Math.max(0, totalHorasEfectivas - jornadaNormal);
+
     return {
       horas_normales: Math.round(horas_normales * 100) / 100,
       horas_extras: Math.round(horas_extras * 100) / 100

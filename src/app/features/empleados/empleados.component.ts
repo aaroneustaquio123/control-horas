@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { EmpleadosService } from '../../core/services/empleados.service';
-import { Empleado } from '../../core/models/models';
+import { RolesService } from '../../core/services/roles.service';
+import { Empleado, Rol } from '../../core/models/models';
 
 @Component({
   selector: 'app-empleados',
@@ -15,6 +16,7 @@ import { Empleado } from '../../core/models/models';
 export class EmpleadosComponent implements OnInit {
   empleados = signal<Empleado[]>([]);
   filteredEmpleados = signal<Empleado[]>([]);
+  roles = signal<Rol[]>([]);
   loading = signal(true);
   searchTerm = signal('');
   showModal = signal(false);
@@ -25,9 +27,12 @@ export class EmpleadosComponent implements OnInit {
   showDeleteConfirm = signal(false);
   deletingId = signal<string | null>(null);
 
-  form: Empleado = { nombre: '', apellido: '', cargo: '', activo: true };
+  form: Empleado = { nombre: '', apellido: '', cargo: '', rol_id: null, activo: true };
 
-  constructor(private svc: EmpleadosService) {}
+  constructor(
+    private svc: EmpleadosService,
+    private rolesSvc: RolesService
+  ) {}
 
   async ngOnInit() {
     await this.load();
@@ -36,8 +41,12 @@ export class EmpleadosComponent implements OnInit {
   async load() {
     this.loading.set(true);
     try {
-      const data = await this.svc.getAll();
-      this.empleados.set(data);
+      const [empData, rolesData] = await Promise.all([
+        this.svc.getAll(),
+        this.rolesSvc.getAll()
+      ]);
+      this.empleados.set(empData);
+      this.roles.set(rolesData);
       this.applyFilter();
     } finally {
       this.loading.set(false);
@@ -51,7 +60,7 @@ export class EmpleadosComponent implements OnInit {
     } else {
       this.filteredEmpleados.set(
         this.empleados().filter(e =>
-          `${e.nombre} ${e.apellido} ${e.cargo}`.toLowerCase().includes(term)
+          `${e.nombre} ${e.apellido} ${e.cargo} ${e.rol?.nombre ?? ''}`.toLowerCase().includes(term)
         )
       );
     }
@@ -63,7 +72,7 @@ export class EmpleadosComponent implements OnInit {
   }
 
   openNew() {
-    this.form = { nombre: '', apellido: '', cargo: '', activo: true };
+    this.form = { nombre: '', apellido: '', cargo: '', rol_id: null, activo: true };
     this.editingEmpleado.set(null);
     this.error.set('');
     this.showModal.set(true);
@@ -90,11 +99,19 @@ export class EmpleadosComponent implements OnInit {
     this.error.set('');
     try {
       const editing = this.editingEmpleado();
+      const payload = {
+        nombre: this.form.nombre,
+        apellido: this.form.apellido,
+        cargo: this.form.cargo,
+        rol_id: this.form.rol_id ? this.form.rol_id : null,
+        activo: this.form.activo
+      };
+
       if (editing?.id) {
-        await this.svc.update(editing.id, this.form);
+        await this.svc.update(editing.id, payload);
         this.showSuccess('Empleado actualizado correctamente.');
       } else {
-        await this.svc.create({ nombre: this.form.nombre, apellido: this.form.apellido, cargo: this.form.cargo, activo: this.form.activo });
+        await this.svc.create(payload);
         this.showSuccess('Empleado creado correctamente.');
       }
       this.closeModal();
@@ -143,5 +160,10 @@ export class EmpleadosComponent implements OnInit {
 
   initials(e: Empleado): string {
     return `${e.nombre[0] ?? ''}${e.apellido[0] ?? ''}`.toUpperCase();
+  }
+
+  formatCurrency(val?: number): string {
+    if (!val && val !== 0) return '—';
+    return `S/. ${val.toFixed(2)}`;
   }
 }

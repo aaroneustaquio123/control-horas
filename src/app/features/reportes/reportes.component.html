@@ -1,8 +1,8 @@
 <div class="page">
   <div class="page-header">
     <div>
-      <h1 class="page-title">Reportes</h1>
-      <p class="page-subtitle">Totales de horas y costos por período</p>
+      <h1 class="page-title">Reportes Consolidados</h1>
+      <p class="page-subtitle">Resumen acumulado de horas y sueldos a pagar por rol (Soles S/.)</p>
     </div>
   </div>
 
@@ -30,7 +30,7 @@
   <!-- Date range display -->
   <div class="date-range-badge" *ngIf="fechaInicio() && fechaFin()">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
-    {{ fechaInicio() }} → {{ fechaFin() }}
+    Período: {{ fechaInicio() }} al {{ fechaFin() }}
   </div>
 
   <!-- Loading -->
@@ -40,13 +40,13 @@
     <!-- Total General Card -->
     <div class="total-card" *ngIf="resumenes().length > 0">
       <div class="total-left">
-        <p class="total-label">Total a pagar en el período</p>
+        <p class="total-label">Total Nómina a Pagar en el Período</p>
         <p class="total-value">{{ formatCurrency(totalGeneral()) }}</p>
       </div>
       <div class="total-stats">
         <div class="total-stat">
           <span class="ts-num">{{ resumenes().length }}</span>
-          <span class="ts-label">Empleados</span>
+          <span class="ts-label">Empleados con registros</span>
         </div>
       </div>
     </div>
@@ -60,7 +60,12 @@
             <h3>{{ r.empleado.nombre }} {{ r.empleado.apellido }}</h3>
             <p>{{ r.empleado.cargo || 'Sin cargo' }}</p>
           </div>
-          <div class="emp-rank" *ngIf="i === 0">⭐</div>
+          <span class="role-tag-rp" *ngIf="r.empleado.rol">
+            {{ r.empleado.rol.nombre }}
+          </span>
+          <span class="role-tag-rp gray" *ngIf="!r.empleado.rol">
+            General
+          </span>
         </div>
 
         <div class="emp-reporte-stats">
@@ -80,8 +85,8 @@
 
         <div class="emp-reporte-total">
           <div class="reporte-desglose">
-            <span>Normal: {{ formatCurrency(r.total_horas_normales * config().precio_hora_normal) }}</span>
-            <span>Extra: {{ formatCurrency(r.total_horas_extras * config().precio_hora_extra) }}</span>
+            <span *ngIf="r.empleado.rol">Tarifas: {{ formatCurrency(r.empleado.rol.precio_hora_normal) }}/h normal | {{ formatCurrency(r.empleado.rol.precio_hora_extra) }}/h extra</span>
+            <span *ngIf="!r.empleado.rol">Tarifas por defecto general</span>
           </div>
           <div class="reporte-total-val">{{ formatCurrency(r.total_costo) }}</div>
         </div>
@@ -95,3 +100,4 @@
     </div>
   </ng-container>
 </div>
+

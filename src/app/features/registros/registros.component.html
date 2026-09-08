@@ -9,7 +9,7 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Registros de Horas</h1>
-      <p class="page-subtitle">Controla las entradas, salidas y horas extras</p>
+      <p class="page-subtitle">Controla el ingreso, salida y cálculo automático de salarios por rol (Soles S/.)</p>
     </div>
     <button class="btn-primary" (click)="openNew()" id="btn-nuevo-registro">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
@@ -30,8 +30,8 @@
     <div class="filter-group">
       <label>Empleado</label>
       <select [(ngModel)]="filtroEmpleado" (change)="filtroEmpleado.set($any($event.target).value)" id="filtro-empleado">
-        <option value="">Todos</option>
-        <option *ngFor="let e of empleados()" [value]="e.id">{{ e.nombre }} {{ e.apellido }}</option>
+        <option value="">Todos los empleados</option>
+        <option *ngFor="let e of empleados()" [value]="e.id">{{ e.nombre }} {{ e.apellido }} {{ e.rol ? '(' + e.rol.nombre + ')' : '' }}</option>
       </select>
     </div>
     <div class="filter-actions">
@@ -50,6 +50,7 @@
         <thead>
           <tr>
             <th>Empleado</th>
+            <th>Rol</th>
             <th>Fecha</th>
             <th>Entrada</th>
             <th>Salida</th>
@@ -57,7 +58,7 @@
             <th>H. Extras</th>
             <th>Costo Normal</th>
             <th>Costo Extra</th>
-            <th>Total</th>
+            <th>Total (S/.)</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -66,8 +67,18 @@
             <td>
               <div class="emp-cell">
                 <div class="emp-avatar">{{ initials(r) }}</div>
-                <span>{{ r.empleado?.nombre }} {{ r.empleado?.apellido }}</span>
+                <div class="emp-names">
+                  <span class="emp-name-text">{{ r.empleado?.nombre }} {{ r.empleado?.apellido }}</span>
+                </div>
               </div>
+            </td>
+            <td>
+              <span class="role-badge-table" *ngIf="r.empleado?.rol">
+                {{ r.empleado?.rol?.nombre }}
+              </span>
+              <span class="role-badge-table gray" *ngIf="!r.empleado?.rol">
+                General
+              </span>
             </td>
             <td>{{ r.fecha }}</td>
             <td><span class="badge badge-blue">{{ formatHora(r.hora_entrada) }}</span></td>
@@ -119,11 +130,23 @@
     <div class="modal-body">
       <div class="form-group">
         <label>Empleado *</label>
-        <select [(ngModel)]="form.empleado_id" id="modal-empleado">
+        <select [(ngModel)]="form.empleado_id" (change)="onEmpleadoSelect()" id="modal-empleado">
           <option value="">-- Seleccionar empleado --</option>
-          <option *ngFor="let e of empleados()" [value]="e.id">{{ e.nombre }} {{ e.apellido }}</option>
+          <option *ngFor="let e of empleados()" [value]="e.id">
+            {{ e.nombre }} {{ e.apellido }} {{ e.rol ? '[' + e.rol.nombre + ']' : '[Sin Rol]' }}
+          </option>
         </select>
       </div>
+
+      <!-- Info banner of selected employee role -->
+      <div class="role-banner" *ngIf="selectedEmpleado()?.rol">
+        <div class="banner-title">Rol Asignado: {{ selectedEmpleado()!.rol!.nombre }}</div>
+        <div class="banner-details">
+          <span>Hora normal: <strong>{{ formatCurrency(selectedEmpleado()!.rol!.precio_hora_normal) }}/h</strong></span>
+          <span>Hora extra: <strong>{{ formatCurrency(selectedEmpleado()!.rol!.precio_hora_extra) }}/h</strong></span>
+        </div>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label>Fecha *</label>
@@ -142,12 +165,12 @@
       </div>
       <div class="form-group">
         <label>Observaciones</label>
-        <textarea [(ngModel)]="form.observaciones" placeholder="Notas adicionales..." rows="2" id="modal-obs"></textarea>
+        <textarea [(ngModel)]="form.observaciones" placeholder="Notas adicionales sobre la jornada..." rows="2" id="modal-obs"></textarea>
       </div>
 
       <!-- Live Preview -->
       <div class="preview-card" *ngIf="preview()">
-        <p class="preview-title">Vista previa del cálculo</p>
+        <p class="preview-title">Cálculo de Sueldo en Soles (S/.)</p>
         <div class="preview-grid">
           <div class="preview-item">
             <span class="preview-label">Horas normales</span>
@@ -167,7 +190,7 @@
           </div>
         </div>
         <div class="preview-total">
-          <span>Total a pagar</span>
+          <span>Total a Pagar</span>
           <span class="preview-total-val">{{ formatCurrency(preview()!.costo_total) }}</span>
         </div>
       </div>
@@ -188,7 +211,7 @@
   <div class="modal modal-sm" *ngIf="showDeleteConfirm()">
     <div class="modal-header"><h2>Eliminar Registro</h2></div>
     <div class="modal-body">
-      <p class="confirm-text">¿Eliminar este registro de horas? Esta acción no se puede deshacer.</p>
+      <p class="confirm-text">¿Estás seguro de que deseas eliminar este registro de horas? Esta acción no se puede deshacer.</p>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
@@ -196,3 +219,4 @@
     </div>
   </div>
 </div>
+
