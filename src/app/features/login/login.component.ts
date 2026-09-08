@@ -17,8 +17,11 @@ export class LoginComponent {
   loading = signal(false);
   error = signal('');
   showPassword = signal(false);
+  isConfigured: boolean;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router) {
+    this.isConfigured = this.auth.isSupabaseConfigured;
+  }
 
   async onSubmit() {
     if (!this.email || !this.password) {

@@ -1,4 +1,13 @@
 <div class="login-page">
+  <!-- Setup warning banner -->
+  <div class="setup-banner" *ngIf="!isConfigured">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+    <div>
+      <strong>Base de datos no configurada</strong>
+      <p>Edita <code>supabase.service.ts</code> con tus claves de Supabase para activar el sistema.</p>
+    </div>
+  </div>
+
   <div class="login-bg">
     <div class="circle c1"></div>
     <div class="circle c2"></div>

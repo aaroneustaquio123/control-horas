@@ -8,6 +8,8 @@ export class AuthService {
   session = signal<AuthSession | null>(null);
 
   constructor(private sb: SupabaseService, private router: Router) {
+    if (!this.sb.isConfigured) return; // No Supabase → skip
+
     // Restore session on init
     this.sb.client.auth.getSession().then(({ data }) => {
       this.session.set(data.session);
@@ -26,14 +28,21 @@ export class AuthService {
     return !!this.session();
   }
 
+  get isSupabaseConfigured(): boolean {
+    return this.sb.isConfigured;
+  }
+
   async signIn(email: string, password: string) {
+    if (!this.sb.isConfigured) throw new Error('Supabase no está configurado.');
     const { data, error } = await this.sb.client.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data;
   }
 
   async signOut() {
-    await this.sb.client.auth.signOut();
+    if (this.sb.isConfigured) {
+      await this.sb.client.auth.signOut();
+    }
     this.router.navigate(['/login']);
   }
 
@@ -41,3 +50,4 @@ export class AuthService {
     return this.session()?.access_token ?? null;
   }
 }
+
