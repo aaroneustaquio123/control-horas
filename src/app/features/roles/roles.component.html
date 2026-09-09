@@ -30,7 +30,7 @@
     <p>Cargando roles...</p>
   </div>
 
-  <!-- Roles Content -->
+  <!-- Roles Table (Rows) -->
   <div *ngIf="!loading()" class="content-body">
     <!-- Empty State -->
     <div *ngIf="roles().length === 0" class="empty-state">
@@ -44,46 +44,47 @@
       <button class="btn-primary" (click)="openNewRole()">+ Agregar Rol</button>
     </div>
 
-    <!-- Roles Grid -->
-    <div *ngIf="roles().length > 0" class="roles-grid">
-      <div *ngFor="let rol of roles()" class="role-card">
-        <div class="role-card-header">
-          <div class="role-badge">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
-            </svg>
-          </div>
-          <div class="role-info">
-            <h3 class="role-name">{{ rol.nombre }}</h3>
-            <p class="role-desc">{{ rol.descripcion || 'Sin descripción' }}</p>
-          </div>
-        </div>
-
-        <div class="role-metrics">
-          <div class="metric-box">
-            <span class="metric-lbl">Hora Normal</span>
-            <span class="metric-val text-primary">{{ formatCurrency(rol.precio_hora_normal) }}</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-lbl">Hora Extra</span>
-            <span class="metric-val text-amber">{{ formatCurrency(rol.precio_hora_extra) }}</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-lbl">Horario Habitual</span>
-            <span class="metric-val text-slate">{{ rol.hora_ingreso_predeterminada || '08:00' }} - {{ rol.hora_salida_predeterminada || '19:00' }}</span>
-          </div>
-        </div>
-
-        <div class="role-card-actions">
-          <button class="btn-icon btn-edit" (click)="openEditRole(rol)" title="Editar Rol">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-            Editar Rol
-          </button>
-          <button class="btn-icon btn-delete" (click)="confirmDeleteRole(rol.id!)" title="Eliminar Rol">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-          </button>
-        </div>
-      </div>
+    <!-- Table Format (Rows) with Responsive Horizontal Scroll -->
+    <div *ngIf="roles().length > 0" class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre del Rol</th>
+            <th>Descripción</th>
+            <th>Tarifa Hora Normal</th>
+            <th>Tarifa Hora Extra</th>
+            <th>Jornada Diaria</th>
+            <th>Horario Predeterminado</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let rol of roles()">
+            <td>
+              <div class="role-cell">
+                <span class="role-badge-table">{{ rol.nombre }}</span>
+              </div>
+            </td>
+            <td class="text-slate">{{ rol.descripcion || 'Sin descripción' }}</td>
+            <td class="text-primary bold">{{ formatCurrency(rol.precio_hora_normal) }}/h</td>
+            <td class="text-amber bold">{{ formatCurrency(rol.precio_hora_extra) }}/h</td>
+            <td class="bold">{{ rol.horas_jornada_normal }} horas</td>
+            <td class="text-slate font-medium">
+              {{ rol.hora_ingreso_predeterminada || '08:00' }} - {{ rol.hora_salida_predeterminada || '19:00' }}
+            </td>
+            <td class="text-center actions-cell">
+              <div class="action-btns">
+                <button class="btn-sm btn-edit" (click)="openEditRole(rol)" title="Editar Rol">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </button>
+                <button class="btn-sm btn-delete" (click)="confirmDeleteRole(rol.id!)" title="Eliminar Rol">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

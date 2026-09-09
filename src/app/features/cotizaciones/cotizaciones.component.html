@@ -1,0 +1,300 @@
+<div class="cotizaciones-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-title-box">
+      <h1>Cotizaciones de Modelos</h1>
+      <p class="subtitle">Calcula el costo real de tus prendas por lote y unidad, definiendo precios de venta y margen de ganancia.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="exportExcel()" id="btn-export-excel-cot">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-2h2v2zm0-4H7v-2h2v2zm0-4H7V7h2v2zm4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2zm4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/>
+        </svg>
+        Excel
+      </button>
+      <button class="btn-secondary" (click)="printPDF()" id="btn-export-pdf-cot">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+        </svg>
+        PDF
+      </button>
+      <button class="btn-primary" (click)="openNew()" id="btn-nueva-cotizacion">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+        </svg>
+        Nueva Cotización
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="successMsg()" class="alert alert-success">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    <span>{{ successMsg() }}</span>
+  </div>
+
+  <div *ngIf="error()" class="alert alert-error">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+    <span>{{ error() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando cotizaciones...</p>
+  </div>
+
+  <!-- Content Body -->
+  <div *ngIf="!loading()" class="content-body">
+    <!-- Empty State -->
+    <div *ngIf="cotizaciones().length === 0" class="empty-state">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+        </svg>
+      </div>
+      <h3>No hay cotizaciones guardadas</h3>
+      <p>Crea tu primera cotización para calcular costos de tela, confección, estampado y precio sugerido por prenda.</p>
+      <button class="btn-primary" (click)="openNew()">+ Cotizar Primer Modelo</button>
+    </div>
+
+    <!-- Table List (Rows) with Responsive Horizontal Scroll -->
+    <div *ngIf="cotizaciones().length > 0" class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Modelo</th>
+            <th class="text-center">Lote (Unid.)</th>
+            <th class="text-right">Costo Unit.</th>
+            <th class="text-right">Costo Total</th>
+            <th class="text-right">Precio Venta Unit.</th>
+            <th class="text-right">Precio Venta Total</th>
+            <th class="text-center">Margen</th>
+            <th class="text-right">Ganancia Est.</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of cotizaciones()">
+            <td class="cell-modelo">
+              <div class="modelo-name">{{ item.nombre_modelo }}</div>
+              <div class="modelo-desc" *ngIf="item.descripcion">{{ item.descripcion }}</div>
+            </td>
+            <td class="text-center bold">{{ item.cantidad }} prendas</td>
+            <td class="text-right text-slate font-medium">{{ formatCurrency(item.costo_unitario) }}</td>
+            <td class="text-right font-medium">{{ formatCurrency(item.costo_total) }}</td>
+            <td class="text-right text-primary bold">{{ formatCurrency(item.precio_venta_unitario) }}</td>
+            <td class="text-right text-primary bold">{{ formatCurrency(item.precio_venta_total) }}</td>
+            <td class="text-center">
+              <span class="badge-margen">+{{ item.margen_ganancia }}%</span>
+            </td>
+            <td class="text-right text-emerald bold">{{ formatCurrency(item.ganancia_estimada) }}</td>
+            <td class="text-center actions-cell">
+              <button class="btn-action btn-edit" (click)="openEdit(item)" title="Editar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              </button>
+              <button class="btn-action btn-delete" (click)="confirmDelete(item.id!)" title="Eliminar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Crear / Editar Cotización -->
+<div *ngIf="showModal()" class="modal-backdrop">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h2>{{ editingItem() ? 'Editar Cotización' : 'Nueva Cotización de Modelo' }}</h2>
+      <button class="btn-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <form (ngSubmit)="save()" class="modal-form">
+      <div class="modal-body-grid">
+        <!-- Form Inputs Column -->
+        <div class="inputs-column">
+          <div class="form-group">
+            <label for="cot-nombre">Nombre del Modelo *</label>
+            <input 
+              type="text" 
+              [(ngModel)]="form.nombre_modelo" 
+              name="nombre_modelo" 
+              required 
+              placeholder="Ej: Polo Oversize Algodón 24/1" 
+              id="cot-nombre"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="cot-desc">Descripción o Notas</label>
+            <input 
+              type="text" 
+              [(ngModel)]="form.descripcion" 
+              name="descripcion" 
+              placeholder="Ej: Manga corta, cuello rib, estampado al agua frente y espalda" 
+              id="cot-desc"
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="cot-cantidad">Cantidad a Producir (Lote) *</label>
+              <input 
+                type="number" 
+                [(ngModel)]="form.cantidad" 
+                (ngModelChange)="updateCalculations()"
+                name="cantidad" 
+                min="1" 
+                required 
+                id="cot-cantidad"
+              />
+            </div>
+            <div class="form-group col-6">
+              <label for="cot-margen">Margen Deseado (%) *</label>
+              <input 
+                type="number" 
+                [(ngModel)]="form.margen_ganancia" 
+                (ngModelChange)="updateCalculations()"
+                name="margen_ganancia" 
+                min="0" 
+                max="500" 
+                required 
+                id="cot-margen"
+              />
+            </div>
+          </div>
+
+          <div class="section-title">Desglose de Costos por Unidad (S/.)</div>
+
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="cot-tela">Tela / Insumo Principal *</label>
+              <input 
+                type="number" 
+                [(ngModel)]="form.costo_tela" 
+                (ngModelChange)="updateCalculations()"
+                name="costo_tela" 
+                min="0" 
+                step="0.10" 
+                id="cot-tela"
+              />
+            </div>
+            <div class="form-group col-6">
+              <label for="cot-estampado">Estampado / Bordado *</label>
+              <input 
+                type="number" 
+                [(ngModel)]="form.costo_estampado" 
+                (ngModelChange)="updateCalculations()"
+                name="costo_estampado" 
+                min="0" 
+                step="0.10" 
+                id="cot-estampado"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="cot-confeccion">Confección / Costura *</label>
+              <input 
+                type="number" 
+                [(ngModel)]="form.costo_confeccion" 
+                (ngModelChange)="updateCalculations()"
+                name="costo_confeccion" 
+                min="0" 
+                step="0.10" 
+                id="cot-confeccion"
+              />
+            </div>
+            <div class="form-group col-6">
+              <label for="cot-acabado">Acabados (Empaque/Doblado) *</label>
+              <input 
+                type="number" 
+                [(ngModel)]="form.costo_acabado" 
+                (ngModelChange)="updateCalculations()"
+                name="costo_acabado" 
+                min="0" 
+                step="0.10" 
+                id="cot-acabado"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="cot-otros">Otros (Hilos, Etiquetas, Transporte)</label>
+            <input 
+              type="number" 
+              [(ngModel)]="form.costo_otros" 
+              (ngModelChange)="updateCalculations()"
+              name="costo_otros" 
+              min="0" 
+              step="0.10" 
+              id="cot-otros"
+            />
+          </div>
+        </div>
+
+        <!-- Calculations Summary Card -->
+        <div class="summary-column">
+          <div class="calculation-card">
+            <h3>Resumen de Cotización</h3>
+            
+            <div class="calc-row">
+              <span>Costo Unitario Producción:</span>
+              <strong class="text-slate">{{ formatCurrency(preview().costo_unitario) }}</strong>
+            </div>
+            <div class="calc-row">
+              <span>Costo Total del Lote ({{ form.cantidad }} u.):</span>
+              <strong class="text-slate">{{ formatCurrency(preview().costo_total) }}</strong>
+            </div>
+
+            <div class="calc-divider"></div>
+
+            <div class="calc-row highlight">
+              <span>Precio de Venta Sugerido / Unid.:</span>
+              <strong class="text-primary large">{{ formatCurrency(preview().precio_venta_unitario) }}</strong>
+            </div>
+            <div class="calc-row">
+              <span>Precio Venta Total del Lote:</span>
+              <strong class="text-primary">{{ formatCurrency(preview().precio_venta_total) }}</strong>
+            </div>
+
+            <div class="calc-divider"></div>
+
+            <div class="calc-row gain">
+              <span>Ganancia Estimada Lote (+{{ form.margen_ganancia }}%):</span>
+              <strong class="text-emerald large">{{ formatCurrency(preview().ganancia_estimada) }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Guardando...' : (editingItem() ? 'Guardar Cambios' : 'Guardar Cotización') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar Eliminación -->
+<div *ngIf="showDeleteConfirm()" class="modal-backdrop">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2>Eliminar Cotización</h2>
+      <button class="btn-close" (click)="cancelDelete()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>¿Estás seguro de que deseas eliminar esta cotización?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
+      <button class="btn-danger" (click)="deleteItem()">Eliminar</button>
+    </div>
+  </div>
+</div>

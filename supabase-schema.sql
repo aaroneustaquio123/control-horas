@@ -1,5 +1,5 @@
 -- ============================================================
--- SCRIPT DE ESQUEMA Y MIGRACIÓN SEGURO
+-- SCRIPT DE ESQUEMA Y MIGRACIÓN SEGURO (CON TABLA COTIZACIONES)
 -- Copia y pega en: Supabase → SQL Editor → New Query → Run
 -- NO borra ni altera datos de las tablas existentes.
 -- ============================================================
@@ -50,6 +50,25 @@ CREATE TABLE IF NOT EXISTS configuracion_precios (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS cotizaciones (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  nombre_modelo TEXT NOT NULL,
+  descripcion TEXT DEFAULT '',
+  cantidad INTEGER NOT NULL DEFAULT 1,
+  costo_tela DECIMAL(10,2) DEFAULT 0,
+  costo_estampado DECIMAL(10,2) DEFAULT 0,
+  costo_confeccion DECIMAL(10,2) DEFAULT 0,
+  costo_acabado DECIMAL(10,2) DEFAULT 0,
+  costo_otros DECIMAL(10,2) DEFAULT 0,
+  margen_ganancia DECIMAL(5,2) DEFAULT 30,
+  costo_unitario DECIMAL(10,2) DEFAULT 0,
+  costo_total DECIMAL(10,2) DEFAULT 0,
+  precio_venta_unitario DECIMAL(10,2) DEFAULT 0,
+  precio_venta_total DECIMAL(10,2) DEFAULT 0,
+  ganancia_estimada DECIMAL(10,2) DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- 2. ASEGURAR COLUMNAS SI LAS TABLAS YA EXISTÍAN DE ANTES
 ALTER TABLE roles ADD COLUMN IF NOT EXISTS hora_ingreso_predeterminada TIME DEFAULT '08:00';
 ALTER TABLE roles ADD COLUMN IF NOT EXISTS hora_salida_predeterminada TIME DEFAULT '19:00';
@@ -64,6 +83,7 @@ ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE empleados ENABLE ROW LEVEL SECURITY;
 ALTER TABLE registros_horas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE configuracion_precios ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cotizaciones ENABLE ROW LEVEL SECURITY;
 
 DO $$ 
 BEGIN
@@ -78,5 +98,8 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Auth full access config') THEN
         CREATE POLICY "Auth full access config" ON configuracion_precios FOR ALL TO authenticated USING (true) WITH CHECK (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Auth full access cotizaciones') THEN
+        CREATE POLICY "Auth full access cotizaciones" ON cotizaciones FOR ALL TO authenticated USING (true) WITH CHECK (true);
     END IF;
 END $$;

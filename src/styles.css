@@ -39,3 +39,88 @@ body {
 input[type="date"], input[type="time"] {
   color-scheme: light;
 }
+
+/* Global Toast Notification Fix */
+.toast {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 9999;
+  animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: calc(100vw - 2.5rem);
+}
+
+.toast svg {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  min-width: 1.25rem !important;
+  min-height: 1.25rem !important;
+  max-width: 1.25rem !important;
+  max-height: 1.25rem !important;
+  flex-shrink: 0 !important;
+}
+
+.toast.success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.toast.error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Horizontal Scrolling Table Container for Mobile */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.table-responsive table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px; /* Ensures table doesn't shrink awkwardly on phones */
+}
+
+/* Print Styles for PDF Export */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .sidebar, .topbar, .btn-primary, .btn-secondary, .btn-icon, .filters-bar, .header-actions, .no-print {
+    display: none !important;
+  }
+  .main-wrapper, .page-content, .page {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  .table-responsive {
+    border: none !important;
+    overflow: visible !important;
+  }
+  .table-responsive table {
+    min-width: 100% !important;
+  }
+}
+

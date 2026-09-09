@@ -242,6 +242,35 @@ export class RegistrosComponent implements OnInit {
     return `S/. ${(val || 0).toFixed(2)}`;
   }
 
+  exportExcel() {
+    const headers = ['Empleado', 'Rol', 'Fecha', 'Hora Entrada', 'Hora Salida', 'Horas Normales', 'Horas Extras', 'Pago Normal (S/)', 'Pago Extra (S/)', 'Total a Pagar (S/)'];
+    const rows = this.registros().map(r => [
+      `"${(r.empleado?.nombre || '') + ' ' + (r.empleado?.apellido || '')}"`,
+      `"${r.empleado?.rol?.nombre || 'General'}"`,
+      r.fecha,
+      r.hora_entrada,
+      r.hora_salida || 'Pendiente',
+      r.horas_normales || 0,
+      r.horas_extras || 0,
+      (r.costo_normal || 0).toFixed(2),
+      (r.costo_extra || 0).toFixed(2),
+      (r.costo_total || 0).toFixed(2)
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Control_Horas_Pagos_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  printPDF() {
+    window.print();
+  }
+
   nombreEmpleado(id: string): string {
     const e = this.empleados().find(emp => emp.id === id);
     return e ? `${e.nombre} ${e.apellido}` : '—';

@@ -35,72 +35,83 @@
     <div class="loader"></div>
   </div>
 
-  <!-- Employees Grid -->
-  <div class="employees-grid" *ngIf="!loading()">
-    <div class="emp-card" *ngFor="let emp of filteredEmpleados()">
-      <div class="emp-card-header">
-        <div class="emp-avatar-lg" [class.inactive]="!emp.activo">
-          {{ initials(emp) }}
-        </div>
-        <div class="emp-badges">
-          <span class="role-tag" *ngIf="emp.rol">
-            {{ emp.rol.nombre }}
-          </span>
-          <span class="emp-badge" [class.active]="emp.activo" [class.inactive]="!emp.activo">
-            {{ emp.activo ? 'Activo' : 'Inactivo' }}
-          </span>
-        </div>
-      </div>
-      <div class="emp-card-body">
-        <h3 class="emp-name">{{ emp.nombre }} {{ emp.apellido }}</h3>
-        <p class="emp-cargo">{{ emp.cargo || 'Sin cargo específico' }}</p>
-        
-        <div class="role-info-box" *ngIf="emp.rol; else noRole">
-          <div class="role-detail-row">
-            <span class="detail-label">Tarifa Normal:</span>
-            <span class="detail-val">{{ formatCurrency(emp.rol.precio_hora_normal) }}/h</span>
-          </div>
-          <div class="role-detail-row">
-            <span class="detail-label">Tarifa Extra:</span>
-            <span class="detail-val amber">{{ formatCurrency(emp.rol.precio_hora_extra) }}/h</span>
-          </div>
-          <div class="role-detail-row">
-            <span class="detail-label">Horario Habitual:</span>
-            <span class="detail-val">{{ emp.rol.hora_ingreso_predeterminada || '08:00' }} - {{ emp.rol.hora_salida_predeterminada || '19:00' }}</span>
-          </div>
-        </div>
-        <ng-template #noRole>
-          <div class="role-info-box warning">
-            <span class="detail-label">Sin Rol Asignado</span>
-            <span class="detail-sub">Se aplicará tarifa general por defecto</span>
-          </div>
-        </ng-template>
-      </div>
-      <div class="emp-card-actions">
-        <button class="btn-icon btn-edit" (click)="openEdit(emp)" [attr.aria-label]="'Editar ' + emp.nombre">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-          Editar
-        </button>
-        <button class="btn-icon btn-toggle" (click)="toggleActivo(emp)" [attr.aria-label]="emp.activo ? 'Desactivar' : 'Activar'">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h10c2.76 0 5-2.24 5-5s-2.24-5-5-5zm0 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h10c1.65 0 3 1.35 3 3s-1.35 3-3 3zm0-4.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/></svg>
-          {{ emp.activo ? 'Desactivar' : 'Activar' }}
-        </button>
-        <button class="btn-icon btn-delete" (click)="confirmDelete(emp.id!)" [attr.aria-label]="'Eliminar ' + emp.nombre">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-          Eliminar
-        </button>
-      </div>
-    </div>
+  <!-- Employees Table List (Rows) -->
+  <div class="table-responsive" *ngIf="!loading()">
+    <table class="data-table" *ngIf="filteredEmpleados().length > 0; else noEmpleados">
+      <thead>
+        <tr>
+          <th>Empleado</th>
+          <th>Rol Asignado</th>
+          <th>Cargo / Detalle</th>
+          <th>Tarifa Normal</th>
+          <th>Tarifa Extra</th>
+          <th>Horario Habitual</th>
+          <th class="text-center">Estado</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let emp of filteredEmpleados()">
+          <td>
+            <div class="emp-cell">
+              <div class="emp-avatar-sm" [class.inactive]="!emp.activo">
+                {{ initials(emp) }}
+              </div>
+              <div class="emp-names">
+                <span class="emp-name-text">{{ emp.nombre }} {{ emp.apellido }}</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="role-badge-table" *ngIf="emp.rol">
+              {{ emp.rol.nombre }}
+            </span>
+            <span class="role-badge-table gray" *ngIf="!emp.rol">
+              Sin Rol
+            </span>
+          </td>
+          <td class="text-slate">{{ emp.cargo || '—' }}</td>
+          <td class="text-primary bold">
+            {{ emp.rol ? formatCurrency(emp.rol.precio_hora_normal) + '/h' : 'General' }}
+          </td>
+          <td class="text-amber bold">
+            {{ emp.rol ? formatCurrency(emp.rol.precio_hora_extra) + '/h' : 'General' }}
+          </td>
+          <td class="text-slate font-medium">
+            {{ emp.rol ? (emp.rol.hora_ingreso_predeterminada || '08:00') + ' - ' + (emp.rol.hora_salida_predeterminada || '19:00') : '08:00 - 19:00' }}
+          </td>
+          <td class="text-center">
+            <span class="status-badge" [class.active]="emp.activo" [class.inactive]="!emp.activo">
+              {{ emp.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td class="text-center actions-cell">
+            <div class="action-btns">
+              <button class="btn-sm btn-edit" (click)="openEdit(emp)" title="Editar Empleado">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              </button>
+              <button class="btn-sm btn-toggle" (click)="toggleActivo(emp)" title="Cambiar Estado">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h10c2.76 0 5-2.24 5-5s-2.24-5-5-5zm0 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h10c1.65 0 3 1.35 3 3s-1.35 3-3 3zm0-4.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/></svg>
+              </button>
+              <button class="btn-sm btn-delete" (click)="confirmDelete(emp.id!)" title="Eliminar Empleado">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
 
-    <!-- Empty -->
-    <div class="empty-state" *ngIf="filteredEmpleados().length === 0">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-      </svg>
-      <p *ngIf="searchTerm()">No se encontraron empleados con "{{ searchTerm() }}"</p>
-      <p *ngIf="!searchTerm()">No hay empleados registrados aún.</p>
-      <button class="btn-primary" (click)="openNew()" *ngIf="!searchTerm()">Agregar primer empleado</button>
-    </div>
+    <ng-template #noEmpleados>
+      <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+        </svg>
+        <p *ngIf="searchTerm()">No se encontraron empleados con "{{ searchTerm() }}"</p>
+        <p *ngIf="!searchTerm()">No hay empleados registrados aún.</p>
+        <button class="btn-primary" (click)="openNew()" *ngIf="!searchTerm()">Agregar primer empleado</button>
+      </div>
+    </ng-template>
   </div>
 
   <!-- Modal Crear/Editar -->
@@ -172,4 +183,3 @@
     </div>
   </div>
 </div>
-

@@ -52,3 +52,22 @@ export interface ResumenEmpleado {
   total_costo: number;
   dias_trabajados: number;
 }
+
+export interface Cotizacion {
+  id?: string;
+  nombre_modelo: string;
+  descripcion?: string;
+  cantidad: number;
+  costo_tela: number;
+  costo_estampado: number;
+  costo_confeccion: number;
+  costo_acabado: number;
+  costo_otros: number;
+  margen_ganancia: number; // Porcentaje ej: 30
+  costo_unitario: number;
+  costo_total: number;
+  precio_venta_unitario: number;
+  precio_venta_total: number;
+  ganancia_estimada: number;
+  created_at?: string;
+}

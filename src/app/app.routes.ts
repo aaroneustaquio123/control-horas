@@ -41,6 +41,11 @@ export const routes: Routes = [
           import('./features/reportes/reportes.component').then(m => m.ReportesComponent)
       },
       {
+        path: 'cotizaciones',
+        loadComponent: () =>
+          import('./features/cotizaciones/cotizaciones.component').then(m => m.CotizacionesComponent)
+      },
+      {
         path: 'configuracion',
         loadComponent: () =>
           import('./features/configuracion/configuracion.component').then(m => m.ConfiguracionComponent)

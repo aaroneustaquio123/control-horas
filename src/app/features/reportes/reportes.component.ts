@@ -112,6 +112,32 @@ export class ReportesComponent implements OnInit {
     }
   }
 
+  exportExcel() {
+    const headers = ['Empleado', 'Rol', 'Días Trabajados', 'Horas Normales', 'Horas Extras', 'Total Horas', 'Total a Pagar (S/)'];
+    const rows = this.resumenes().map(r => [
+      `"${r.empleado.nombre} ${r.empleado.apellido}"`,
+      `"${r.empleado.rol?.nombre || 'General'}"`,
+      r.dias_trabajados,
+      r.total_horas_normales.toFixed(2),
+      r.total_horas_extras.toFixed(2),
+      (r.total_horas_normales + r.total_horas_extras).toFixed(2),
+      r.total_costo.toFixed(2)
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Reporte_Nomina_Pago_${this.fechaInicio()}_al_${this.fechaFin()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  printPDF() {
+    window.print();
+  }
+
   formatCurrency(val: number): string {
     return `S/. ${(val || 0).toFixed(2)}`;
   }
